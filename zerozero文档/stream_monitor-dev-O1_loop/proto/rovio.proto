@@ -1,0 +1,163 @@
+syntax = "proto3";
+
+package rovio;
+
+message Vec3f {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message Mat3f {
+  float xx = 1;
+  float xy = 2;
+  float xz = 3;
+  float yx = 4;
+  float yy = 5;
+  float yz = 6;
+  float zx = 7;
+  float zy = 8;
+  float zz = 9;
+}
+
+message Quatf {
+  float w = 1;
+  float x = 2;
+  float y = 3;
+  float z = 4;
+}
+
+message BaroData {
+  float height_above_sea_level = 1;
+  bool has_ground_effect = 2;
+}
+
+enum TerrainStatus {
+  TERRAIN_STATUS_INVALID = 0;
+  TERRAIN_STATUS_PREDICT = 1;
+  TERRAIN_STATUS_VALID = 2;
+}
+
+message TerrainData {
+  TerrainStatus status = 1;
+  float height = 2;
+}
+
+enum DroneFlyState {
+  DISARMED = 0;
+  ARMED = 1;
+  FLYING = 2;
+}
+
+message ImuInfo {
+  double t = 1;
+  Vec3f gyr = 2;
+  Vec3f acc = 3;
+  Quatf quat = 4;
+}
+
+message InputInfo {
+  double t = 1;
+  Vec3f gyr = 2;
+  Vec3f acc = 3;
+  Quatf quat = 4;
+  float proxi = 5;
+  DroneFlyState flystate = 6;
+  BaroData baro = 7;
+  bool imu0clip = 8;
+  bool collision = 9;
+  ImuInfo imu1   = 10;
+  float gimbal_pit_mec_angle = 11;  // degree
+  Vec3f vel = 12;  // fc velocity in local ned frame
+  TerrainData terrain = 13;
+}
+
+message InputInfoPack {
+  repeated InputInfo info = 1;
+}
+
+enum RovioStatus {
+  INVALID  = 0;
+  BAD      = 1;
+  NORMAL   = 2;
+  GOOD     = 3;
+  OptiFlow = 4;
+}
+
+enum ErrCode {
+  ERROR_NONE = 0;
+  ERROR_ENV_TOO_DARK = 1;              // 1 << 0 = 0x1
+  ERROR_BOTTOM_CAM_UNCALIBRATED = 2;   // 1 << 1 = 0x2
+  ERROR_REAR_CAM_UNCALIBRATED = 4;     // 1 << 2 = 0x4
+  ERROR_DEPTH_SPIKE = 8;               // 1 << 3 = 0x8
+}
+
+enum VIOSource {
+  // bottom camera VIO
+  BOTTOM_CAM = 0;
+  // main camera VIO
+  MAIN_CAM = 1;
+}
+
+message OutputInfo {
+  RovioStatus status      = 1;
+  double timestamp        = 2;
+  Vec3f position          = 3;
+  Vec3f velocity          = 4;
+  Quatf quaternion        = 5;
+  Vec3f gyr_bias          = 6;
+  Vec3f acc_bias          = 7;
+  Vec3f pos_cov           = 8;
+  Vec3f vel_cov           = 9;
+  Vec3f att_cov           = 10;
+  float depth             = 11;
+  int32 err_code          = 12;
+  VIOSource vio_source    = 13; // VIO data source
+  float belief            = 14; // belief of the VIO result
+}
+
+message RGB {
+  uint32 R = 1;
+  uint32 G = 2;
+  uint32 B = 3;
+}
+message Point {
+  int64 idx = 1;
+  Vec3f coordinate = 2;
+  RGB rgb = 3;
+}
+
+message PointCloud {
+  double timestamp = 1;
+  repeated Point point = 2;
+}
+
+// request
+message VIOCommand {
+  enum Action {
+    ACTION_START            = 0; // start service
+    ACTION_STOP             = 1; // stop service
+  }
+  enum Mode {
+    MODE_LOW_ALTITUDE          = 0;
+    MODE_HIGH_ALTITUDE         = 1;  // 高空模式(30m俯拍与手动控制)
+  }
+
+  // for orbit task
+  enum MultipleCircleEvent {
+    MULTIPLE_CIRCLE_START = 0; // multiple circle start event, orbit task start
+    MULTIPLE_CIRCLE_END   = 1; // multiple circle end event, orbit task end
+    FIRST_CIRCLE_END      = 2; // first circle end event
+  }
+
+  oneof command {
+    Action action           = 1; // VIO service action
+    Mode mode               = 2; // VIO mode
+    MultipleCircleEvent event = 3; // multiple circle event
+  }
+}
+
+message VIOCommandAck {
+  bool isSuccess = 1;
+}
+

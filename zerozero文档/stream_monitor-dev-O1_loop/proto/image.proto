@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package vision;
+
+message BottomImage {
+  bytes image_buffer = 1; //图像数据缓存
+  double timestamp = 2; //图像时间戳，单位：秒
+  float exposure_time = 3; //图像曝光时间，单位：秒
+  float lux_index = 4;
+}
+message TailImage {
+  bytes image_buffer = 1; //图像数据缓存
+  double timestamp = 2; //图像时间戳，单位：秒
+  float exposure_time = 3; //图像曝光时间，单位：秒
+  float lux_index = 4;
+}
+message StereoImage {
+  BottomImage bottom_image = 1;
+  TailImage tail_image = 2;
+}
+
+message Image {
+  bytes image_buffer = 1; //图像数据缓存
+  double timestamp = 2; //图像时间戳，单位：秒
+  uint32 width = 3; //图像宽度
+  uint32 height = 4; //图像高度
+  uint32 channel = 5;
+}
